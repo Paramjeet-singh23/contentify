@@ -1,8 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from db.database import Base
 from datetime import datetime
-from .user import User
-
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"

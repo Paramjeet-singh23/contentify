@@ -60,10 +60,16 @@ def create_refresh_token(user_id: int, expiration_delta: timedelta = timedelta(m
     return jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_access_token(form_data, db: Session):
+def verify_user(form_data, db: Session):
     user = auth.authorize_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=404, detail="password is wrong")
+    
+    # Revoke all existing refresh tokens for the user
+    existing_tokens = db.query(RefreshToken).filter_by(user_id=user.id).all()
+    for token in existing_tokens:
+        token.revoked = True
+    db.commit()
 
     access_token = auth.create_access_token(user.username, user.id, user.group_id)
     refresh_token = auth.create_refresh_token(user.id)
