@@ -22,3 +22,20 @@ class Token(BaseModel):
     token_type: str
     access_token: str
     refresh_token: str
+
+class CreateWorkspace(BaseModel):
+    name: str
+    description: str
+    owner_id: int
+    api_key: str 
+    api_secret: str
+
+class Workspace(BaseModel):
+    name: str
+    description: str
+    owner_id: int
+
+class WorkspaceUserMapping(BaseModel):
+    workspace_id: str
+    user_id: str
+    role: str
