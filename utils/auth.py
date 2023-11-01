@@ -12,7 +12,7 @@ from core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFE
 
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
@@ -44,8 +44,8 @@ def authorize_user(username: str, password: str, db):
     return user
 
 
-def create_access_token(username: str, user_id: int, role: str, expiration_delta: timedelta = timedelta(minutes= ACCESS_TOKEN_EXPIRE_MINUTES)):
-    encode = {"sub": username, "id": user_id, "role": role}
+def create_access_token(username: str, user_id: int, expiration_delta: timedelta = timedelta(minutes= ACCESS_TOKEN_EXPIRE_MINUTES)):
+    encode = {"sub": username, "id": user_id}
     expires = datetime.utcnow() + expiration_delta
     encode.update({"exp": expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -71,7 +71,7 @@ def verify_user(form_data, db: Session):
         token.revoked = True
     db.commit()
 
-    access_token = auth.create_access_token(user.username, user.id, user.group_id)
+    access_token = auth.create_access_token(user.username, user.id)
     refresh_token = auth.create_refresh_token(user.id)
 
     # Store refresh token in the database
@@ -97,7 +97,7 @@ def create_new_access_token(refresh_token: str, db: Session):
         # generate a new access token
         user_id = payload.get("user_id")
         user = db.query(User).filter(User.id == user_id).first()
-        new_access_token = create_access_token(user.username, user.id, user.group)
+        new_access_token = create_access_token(user.username, user.id)
         token_resp = { "token_type": "Bearer", "access_token": new_access_token, "refresh_token": refresh_token}
         return token_resp
     except JWTError:

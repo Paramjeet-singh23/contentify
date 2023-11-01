@@ -1,12 +1,9 @@
 # Imports organized by package
-from fastapi import FastAPI, Depends, HTTPException, APIRouter
+from fastapi import Depends, HTTPException, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
-
 from sqlalchemy.orm import Session
-
-from db import crud, models, schemas
-from db.database import SessionLocal, engine, get_db
-
+from db import crud, schemas
+from db.database import get_db
 from utils import auth
 from typing import Annotated
 

@@ -28,10 +28,10 @@ def get_workspace_by_id(workspace_id: int, current_user: schemas.User = Depends(
         raise HTTPException(status_code=404, detail="Workspace not found")
     return db_workspace
 
-@router.get("/workspaces/owner/{owner_id}", response_model=List[schemas.Workspace])  # Ensure you have a List imported from typing
-def get_workspaces_by_owner_id(owner_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+@router.get("/workspaces/owner/", response_model=List[schemas.Workspace])  # Ensure you have a List imported from typing
+def get_workspaces_by_owner_id(current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     """Retrieve all workspaces by the owner's ID."""
-    return crud.get_workspaces_by_owner(db, owner_id=owner_id)
+    return crud.get_workspaces_by_owner(db, owner_id=current_user.id)
 
 # WorkspaceUserMapping Endpoints
 

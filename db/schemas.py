@@ -26,7 +26,6 @@ class Token(BaseModel):
 class CreateWorkspace(BaseModel):
     name: str
     description: str
-    owner_id: int
     api_key: str 
     api_secret: str
 
@@ -36,6 +35,6 @@ class Workspace(BaseModel):
     owner_id: int
 
 class WorkspaceUserMapping(BaseModel):
-    workspace_id: str
-    user_id: str
+    workspace_id: int
+    user_id: int
     role: str
