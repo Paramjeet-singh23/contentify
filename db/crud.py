@@ -2,6 +2,9 @@ from .models.user import User
 from .models.workspace import Workspace, WorkspaceUserMapping
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from .models.content import Content
+from core.config import MEDIA_PATH
+import os
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -81,3 +84,54 @@ def create_user_mapping_for_workspace(db: Session, workspace_id: int, user_id: i
     db.commit()
     db.refresh(mapping)
     return mapping
+
+
+# 1. Create a new content item
+def create_content(db: Session, content: Content, user_id: int, workspace_id: int):
+    db_content = Content(
+        name=content.name,
+        title=content.title,
+        path=content.path,
+        user_id=user_id,
+        workspace_id=workspace_id
+    )
+    db.add(db_content)
+    db.commit()
+    db.refresh(db_content)
+    return db_content
+
+# 2. Retrieve a content item by its ID
+def get_content(db: Session, content_id: int):
+    return db.query(Content).filter(Content.id == content_id).first()
+
+# 3. Retrieve all content items for a given workspace
+def get_contents_by_workspace(db: Session, workspace_id: int):
+    return db.query(Content).filter(Content.workspace_id == workspace_id).all()
+
+# 4. Retrieve all content items added by a given user
+def get_contents_by_user(db: Session, user_id: int):
+    return db.query(Content).filter(Content.user_id == user_id).all()
+
+# 5. Update a content item by its ID
+def update_content(db: Session, content_id: int, updated_content: Content):
+    db_content = db.query(Content).filter(Content.id == content_id).first()
+    if db_content:
+        for key, value in updated_content.__dict__.items():
+            setattr(db_content, key, value)
+        db.commit()
+        db.refresh(db_content)
+    return db_content
+
+def delete_content(db: Session, content_id: int):
+    db_content = db.query(Content).filter(Content.id == content_id).first()
+    if db_content:
+        # Set is_available to False
+        db_content.is_available = False
+        
+        # Delete the associated media file
+        media_path = os.path.join(MEDIA_PATH, db_content.path)
+        if os.path.exists(media_path):
+            os.remove(media_path)
+
+        # Save the changes to the database
+        db.commit()

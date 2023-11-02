@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, EmailStr
 from datetime import date
+from datetime import datetime
 
 class User(BaseModel):
     username: str
@@ -38,3 +39,30 @@ class WorkspaceUserMapping(BaseModel):
     workspace_id: int
     user_id: int
     role: str
+
+# Base schema for Content
+class ContentBase(BaseModel):
+    name: str
+    title: str
+    path: str
+
+# Schema to read Content
+class Content(ContentBase):
+    id: int
+    user_id: int
+    workspace_id: int
+    created_datetime: datetime
+    updated_datetime: datetime
+    is_available: bool
+
+    class Config:
+        form_mode = True
+
+# Schema to create Content
+class CreateContent(ContentBase):
+    user_id: int
+    workspace_id: int
+
+# Schema to update Content
+class UpdateContent(ContentBase):
+    pass

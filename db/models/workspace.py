@@ -19,6 +19,7 @@ class Workspace(Base):
     
     # Relationship with User model
     owner = relationship("User", back_populates="workspaces")
+    content = relationship("Content", back_populates="workspace")
 
 
 

@@ -1,10 +1,9 @@
 # db/models/User.py
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime, Date
+from sqlalchemy import Column, Integer, String, DateTime, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from db.database import Base
-from enum import Enum as PyEnum
 
 class User(Base):
     __tablename__ = "users"
@@ -20,3 +19,4 @@ class User(Base):
     update_datetime = Column(DateTime(timezone=True), onupdate=func.now())
 
     workspaces = relationship("Workspace", back_populates="owner")
+    content = relationship("Content", back_populates="user")

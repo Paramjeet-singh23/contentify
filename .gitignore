@@ -8,6 +8,7 @@ __pycache__/
 
 #self-added
 venv
+media
 
 # Distribution / packaging
 .Python
