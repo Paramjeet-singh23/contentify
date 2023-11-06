@@ -3,6 +3,8 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date
 from datetime import datetime
+from fastapi import UploadFile, Form
+from dataclasses import dataclass 
 
 class User(BaseModel):
     username: str
@@ -44,7 +46,6 @@ class WorkspaceUserMapping(BaseModel):
 class ContentBase(BaseModel):
     name: str
     title: str
-    path: str
 
 # Schema to read Content
 class Content(ContentBase):
@@ -55,13 +56,12 @@ class Content(ContentBase):
     updated_datetime: datetime
     is_available: bool
 
-    class Config:
-        form_mode = True
-
 # Schema to create Content
-class CreateContent(ContentBase):
-    user_id: int
+class CreateContent(BaseModel):
+    name: str 
+    title: str 
     workspace_id: int
+    path: str
 
 # Schema to update Content
 class UpdateContent(ContentBase):

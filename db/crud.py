@@ -87,13 +87,13 @@ def create_user_mapping_for_workspace(db: Session, workspace_id: int, user_id: i
 
 
 # 1. Create a new content item
-def create_content(db: Session, content: Content, user_id: int, workspace_id: int):
+def create_content(db: Session, content: Content, user_id: int):
     db_content = Content(
         name=content.name,
         title=content.title,
         path=content.path,
         user_id=user_id,
-        workspace_id=workspace_id
+        workspace_id=content.workspace_id
     )
     db.add(db_content)
     db.commit()

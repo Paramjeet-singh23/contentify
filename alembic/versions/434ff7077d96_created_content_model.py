@@ -1,8 +1,8 @@
-"""Added content Model and endpoints
+"""Created Content Model
 
-Revision ID: 9dbe7d5cb085
+Revision ID: 434ff7077d96
 Revises: 937c9780cd5d
-Create Date: 2023-11-02 05:57:05.304034
+Create Date: 2023-11-06 11:45:19.900207
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '9dbe7d5cb085'
+revision: str = '434ff7077d96'
 down_revision: Union[str, None] = '937c9780cd5d'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -30,6 +30,7 @@ def upgrade() -> None:
     sa.Column('created_datetime', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_datetime', sa.DateTime(timezone=True), nullable=True),
     sa.Column('is_available', sa.Boolean(), nullable=False),
+    sa.Column('is_approved_by_owner', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['workspace_id'], ['workspaces.id'], ),
     sa.PrimaryKeyConstraint('id')

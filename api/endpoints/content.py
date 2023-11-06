@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, APIRouter, UploadFile, File
 from sqlalchemy.orm import Session
 from db import crud, models, schemas
 from db.database import SessionLocal, engine, get_db
+from db.models.workspace import Workspace, WorkspaceUserMapping
 from utils import auth
 from typing import List
 import os
@@ -9,7 +10,7 @@ from fastapi import UploadFile, Form
 from fastapi.param_functions import File
 import aiofiles
 from core.config import MEDIA_PATH
-import datetime
+import datetime  
 
 SUPPORTED_EXTENSIONS = ["mp4", "mov", "avi", "wmv", "flv", "webm", "mpeg4", "3gpp", "mpegps", "cineform", "hevc", "dnxhr", "prores"]
 
@@ -21,7 +22,7 @@ router = APIRouter()
 # Content Endpoints
 def is_owner_of_workspace(db: Session, user_id: int, workspace_id: int) -> bool:
     """Check if the user is the owner of the given workspace."""
-    workspace = db.query(models.Workspace).filter(models.Workspace.id == workspace_id).first()
+    workspace = db.query(Workspace).filter(id == workspace_id).first()
     if workspace and workspace.owner_id == user_id:
         return True
     return False
@@ -42,7 +43,7 @@ def verify_workspace_access(db: Session, user_id: int, workspace_id: int):
         return True
     
     # Check if the user is a member (you'll need a method to fetch this from your database)
-    user_mapping = db.query(models.WorkspaceUserMapping).filter_by(workspace_id=workspace_id, user_id=user_id).first()
+    user_mapping = db.query(WorkspaceUserMapping).filter_by(workspace_id=workspace_id, user_id=user_id).first()
     
     if not user_mapping:
         raise HTTPException(status_code=403, detail="Access forbidden: You are not a member or owner of this workspace")
@@ -52,37 +53,43 @@ def verify_workspace_access(db: Session, user_id: int, workspace_id: int):
 
 @router.post("/content/", response_model=schemas.Content)
 async def create_content_endpoint(
-    content: schemas.CreateContent,
+    name: str = Form(...),
+    title: str = Form(...),
+    workspace_id: int = Form(...),
     file: UploadFile = File(...),
     current_user: schemas.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new content."""
+    """Create new content with text fields and a file upload."""
 
-    # Check if the file's extension is in the list of supported extensions
+    # Check if the file's extension is supported
     file_extension = file.filename.split(".")[-1].lower()
     if file_extension not in SUPPORTED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Unsupported file format")
 
-    # Create a path to save the video, you can adjust this as needed
+    # Generate a timestamped filename to avoid naming conflicts
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-
-    # Add the timestamp to the filename
     new_filename = f"{timestamp}_{file.filename}"
+    file_path = os.path.join(MEDIA_PATH, new_filename)
 
-    file_path = os.path.join(MEDIA_PATH, new_filename)  
-    file_path = os.path.join(MEDIA_PATH, file.filename)
-
-    # Save the file in chunks
+    # Save the file in chunks to the specified path
     async with aiofiles.open(file_path, 'wb') as buffer:
-        while content := await file.read(1024):  # read by 1KB chunks
-            await buffer.write(content)
+        while data_chunk := await file.read(1024):  # read by 1KB chunks
+            await buffer.write(data_chunk)
 
-    # Here, you could modify content.path to point to the saved file path if needed
-    content.path = file_path
+    # Construct the content data model for database operation
+    content_data = schemas.CreateContent(
+        name=name,
+        title=title,
+        workspace_id=workspace_id,
+        path=file_path  # Assuming CreateContent schema includes a 'path' field
+    )
 
-    # Then save the content metadata to the database
-    return crud.create_content(db=db, content=content, user_id=current_user.id, workspace_id=content.workspace_id)
+    # Save the content metadata to the database
+    created_content = crud.create_content(db=db, content=content_data, user_id=current_user.id)
+    
+    return created_content
+
 
 @router.get("/content/{content_id}", response_model=schemas.Content)
 def get_content_by_id(content_id: int, current_user: schemas.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
